@@ -1,0 +1,38 @@
+# dino_rl/config.py
+import torch
+
+# 화면 및 프레임 설정
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 400
+FPS = 60
+
+# 게임 물리 법칙
+GRAVITY = 0.8
+JUMP_VELOCITY = -15
+DUCK_GRAVITY = 2.0
+START_SPEED = 7
+MAX_SPEED = 18
+SPEED_INCREMENT = 0.0005
+
+# 강화학습(RL) 하이퍼파라미터
+STATE_SIZE = 16
+ACTION_SIZE = 3
+BUFFER_SIZE = 100000
+BATCH_SIZE = 64
+GAMMA = 0.99
+LR = 0.00025
+EPS_START = 1.0
+EPS_END = 0.05
+EPS_DECAY = 10000  # 탐험률 감소 속도 (낮을수록 빨리 똑똑해짐)
+TARGET_UPDATE_FREQ = 1000
+TAU = 0.005 
+
+# 보상(Reward) 및 패널티 시스템
+REWARD_SURVIVE = 0.1
+REWARD_COIN = 20.0
+REWARD_KING_COIN = 50.0
+REWARD_PASS = 40.0       # 장애물 통과 보상을 높여 학습 가속
+REWARD_NEAR_MISS = 5.0
+REWARD_DEATH = -100.0
+REWARD_TRAP_DEATH = -120.0
+PENALTY_IDLE_DUCK = -0.2
