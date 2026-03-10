@@ -20,7 +20,7 @@ class Agent:
         self.steps = 0
 
     def act(self, state, train=True):
-        # 저장된 steps를 기반으로 Epsilon 계산
+        # 현재 steps를 기반으로 Epsilon 계산
         eps = config.EPS_END + (config.EPS_START - config.EPS_END) * \
               np.exp(-1. * self.steps / config.EPS_DECAY) if train else 0.02
         
@@ -54,22 +54,26 @@ class Agent:
         torch.nn.utils.clip_grad_norm_(self.online_net.parameters(), 1.0)
         self.optimizer.step()
 
+        # 소프트 타겟 업데이트 적용
         for t, o in zip(self.target_net.parameters(), self.online_net.parameters()):
             t.data.copy_(config.TAU * o.data + (1 - config.TAU) * t.data)
 
-    # 가중치와 steps를 함께 저장
     def save(self, path="model.pth"):
         torch.save({
             'model_state_dict': self.online_net.state_dict(),
             'steps': self.steps
         }, path)
 
-    # 가중치와 steps를 함께 불러오기
     def load(self, path="model.pth"):
         if os.path.exists(path):
             checkpoint = torch.load(path, map_location=self.device)
-            self.online_net.load_state_dict(checkpoint['model_state_dict'])
+            # 딕셔너리 구조와 단순 state_dict 구조 모두 대응 가능하도록 설계
+            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                self.online_net.load_state_dict(checkpoint['model_state_dict'])
+                self.steps = checkpoint.get('steps', 0)
+            else:
+                self.online_net.load_state_dict(checkpoint)
+                self.steps = 0
             self.target_net.load_state_dict(self.online_net.state_dict())
-            self.steps = checkpoint.get('steps', 0)
             return True
         return False

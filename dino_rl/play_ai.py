@@ -1,34 +1,33 @@
-import torch
+# dino_rl/play_ai.py
 import pygame
-
-from env.dino_env import DinoEnv
-from agent.network import DQN
-from render.renderer import Renderer
 import config
-
+from env.dino_env import DinoEnv
+from agent.dqn_agent import Agent
+from render.renderer import Renderer
 
 env = DinoEnv()
 renderer = Renderer()
+agent = Agent()
 
-model = DQN(config.STATE_SIZE,config.ACTION_SIZE)
-
-model.load_state_dict(torch.load("model.pth"))
-
-model.eval()
+# 통일된 로드 방식 사용
+if not agent.load("model.pth"):
+    print("학습된 모델(model.pth)이 없습니다.")
+    exit()
 
 state = env.reset()
 
 while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
 
-    pygame.event.pump()
-
-    state_t = torch.FloatTensor(state).unsqueeze(0)
-
-    action = model(state_t).argmax().item()
-
-    state,reward,done = env.step(action)
-
-    renderer.draw(env)
+    # AI 플레이 시에는 탐험(Random action)을 배제
+    action = agent.act(state, train=False)
+    state, reward, done = env.step(action)
+    
+    renderer.draw_game(env, agent, "AI_PLAY", 0)
 
     if done:
         state = env.reset()
+        pygame.time.delay(500)
