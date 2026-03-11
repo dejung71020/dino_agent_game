@@ -92,15 +92,28 @@ class DinoEnv:
             self.coins.append(Coin(new_x - 150))
 
     def get_state(self):
-        obs = self.obstacles[0]
-        next_obs = self.obstacles[1] if len(self.obstacles) > 1 else Obstacle(2000)
+        # 💡 핵심 수정 1: 공룡의 앞부분(대략 x=40)을 기준으로, 이미 지나간 장애물은 시야에서 제외!
+        active_obs = [o for o in self.obstacles if o.x + o.width > 40]
+        
+        # 진짜로 내 앞에 다가오는 1순위, 2순위 장애물을 세팅
+        obs = active_obs[0] if len(active_obs) > 0 else Obstacle(2000)
+        next_obs = active_obs[1] if len(active_obs) > 1 else Obstacle(2000)
+        
         coin = self.coins[0] if self.coins else Coin(2000)
         
         state = [
             self.dino_y / 200, self.dino_vel / 20, self.speed / config.MAX_SPEED,
+            
+            # 첫 번째 장애물 정보
             (obs.x - 50) / 1000, obs.y / 200, obs.width / 100, (1 if obs.type == "ptero" else 0),
-            (next_obs.x - 50) / 1000, next_obs.y / 200, (1 if next_obs.type == "ptero" else 0),
+            
+            # 두 번째 장애물 정보 (💡 핵심 수정 2: next_obs.width / 100 추가!)
+            (next_obs.x - 50) / 1000, next_obs.y / 200, next_obs.width / 100, (1 if next_obs.type == "ptero" else 0),
+            
+            # 코인 및 공룡 상태 정보
             (coin.x - 50) / 1000, (coin.y - self.dino_y) / 200,
-            int(self.is_ducking), int(self.is_jumping), 0, 0
+            int(self.is_ducking), int(self.is_jumping), 
+            
+            0 # 차원 수(16차원)를 맞추기 위한 패딩
         ]
         return np.array(state, dtype=np.float32)
