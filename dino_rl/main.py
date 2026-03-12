@@ -103,7 +103,7 @@ def main():
             mode = "MENU"
 
         elif mode == "TRAIN_MAX":
-            print("🚀 최대 효율 학습 모드(화면 렌더링 끔). 50 Ep마다 콘솔 출력. ESC: 메뉴로")
+            print("🚀 최대 효율 학습 모드 가동 중... (ESC: 메뉴로)")
             agent.load("model.pth")
             stop_training = False
             
@@ -112,14 +112,21 @@ def main():
                 state = env.reset()
                 done = False
                 while not done:
-                    pygame.event.pump()
-                    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-                        stop_training = True; break
+                    # 100스텝마다 한 번씩만 키 입력 체크 (연산 효율 극대화)
+                    if agent.steps % 100 == 0:
+                        pygame.event.pump()
+                        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+                            stop_training = True; break
 
                     action = agent.act(state)
                     next_state, reward, done = env.step(action)
                     agent.memory.push(state, action, reward, next_state, done)
-                    agent.learn()
+                    
+                    # 💡 제안드린 config.LEARN_EVERY 주기에 맞춰 집중 학습
+                    if agent.steps % config.LEARN_EVERY == 0:
+                        for _ in range(config.LEARN_STEPS):
+                            agent.learn()
+                            
                     state = next_state
                 
                 if stop_training: break
@@ -128,9 +135,11 @@ def main():
                     high_score = env.score
                     save_high_score(high_score)
                 
+                # 출력 빈도를 조절하여 콘솔 I/O 병목 방지
                 if ep % 50 == 0:
-                    current_eps = config.EPS_END + (config.EPS_START - config.EPS_END) * np.exp(-1. * agent.steps / config.EPS_DECAY)
-                    print(f"🚀 [MAX] Ep: {ep} | Score: {env.score} | Steps: {agent.steps} | Eps: {current_eps:.3f}")
+                    current_eps = config.EPS_END + (config.EPS_START - config.EPS_END) * \
+                                  np.exp(-1. * agent.steps / config.EPS_DECAY)
+                    print(f"🚀 [MAX] Ep: {ep} | Score: {env.score} | Total Steps: {agent.steps} | Eps: {current_eps:.3f}")
                     agent.save("model.pth")
                 ep += 1
             

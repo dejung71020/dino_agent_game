@@ -41,3 +41,6 @@ PENALTY_IDLE_DUCK = -0.2
 PER_ALPHA = 0.6         # 우선순위를 얼마나 강하게 적용할지 (0이면 랜덤, 1이면 오답만)
 PER_BETA_START = 0.4    # 중요도 샘플링(IS) 가중치 시작값 (초반 편향을 잡아줌)
 PER_BETA_FRAMES = 50000 # 베타 값이 1.0에 도달할 때까지 걸리는 스텝 수
+
+LEARN_EVERY = 4       # 4스텝마다 학습 수행 (환경 실행 속도 향상)
+LEARN_STEPS = 2       # 한 번 학습할 때 업데이트 횟수 (GPU/CPU 활용도 극대화)
