@@ -18,29 +18,29 @@ SPEED_INCREMENT = 0.0005
 STATE_SIZE = 16
 ACTION_SIZE = 3
 BUFFER_SIZE = 100000
-BATCH_SIZE = 128      # 🚀 기존 64에서 128로 증가 (학습 안정성 극대화)
-GAMMA = 0.995         # 🚀 기존 0.99에서 0.995로 증가 (미래 생존 중시)
+BATCH_SIZE = 128
+GAMMA = 0.995
 LR = 0.00025
 EPS_START = 1.0
-EPS_END = 0.05
-EPS_DECAY = 10000     # 탐험률 감소 속도
+EPS_END = 0.01          # 🚀 최저 탐험률을 0.05 -> 0.01로 낮춰 후반부 안정성 도모
+EPS_DECAY = 50000       # 🚀 10000 -> 50000으로 대폭 증가 (고속 구간까지 충분히 탐험)
 TARGET_UPDATE_FREQ = 1000
-TAU = 0.005 
+TAU = 0.001             # 🚀 0.005 -> 0.001로 감소 (타겟 네트워크의 급격한 변동 방지)
 
-# 보상(Reward) 및 패널티 시스템
+# 보상(Reward) 및 패널티 시스템 최적화 (밸런스 패치)
 REWARD_SURVIVE = 0.1
-REWARD_COIN = 20.0
-REWARD_KING_COIN = 50.0
-REWARD_PASS = 100.0         # 🚀 기존 40에서 100으로 대폭 상승 (장애물 회피 칭찬)
-REWARD_NEAR_MISS = 5.0
-REWARD_DEATH = -1000.0      # 🚀 기존 -100에서 -1000으로 하락 (죽음 패널티 극대화)
-REWARD_TRAP_DEATH = -1200.0 # 🚀 덫 충돌 시 더 큰 패널티 부여
-PENALTY_IDLE_DUCK = -0.2
+REWARD_COIN = 10.0
+REWARD_KING_COIN = 30.0
+REWARD_PASS = 20.0          # 🚀 100 -> 20으로 하향 (점수 뻥튀기 방지, 생존 본연에 집중)
+REWARD_NEAR_MISS = 2.0
+REWARD_DEATH = -100.0       # 🚀 -1000 -> -100으로 대폭 완화 (과도한 방어적 플레이 억제)
+REWARD_TRAP_DEATH = -120.0
+PENALTY_IDLE_DUCK = -0.1
 
-# 🚀 PER (우선순위 경험 재생) 하이퍼파라미터
-PER_ALPHA = 0.6         # 우선순위를 얼마나 강하게 적용할지 (0이면 랜덤, 1이면 오답만)
-PER_BETA_START = 0.4    # 중요도 샘플링(IS) 가중치 시작값 (초반 편향을 잡아줌)
-PER_BETA_FRAMES = 50000 # 베타 값이 1.0에 도달할 때까지 걸리는 스텝 수
+# PER (우선순위 경험 재생) 하이퍼파라미터
+PER_ALPHA = 0.6
+PER_BETA_START = 0.4
+PER_BETA_FRAMES = 50000 # EPS_DECAY와 주기를 맞춤
 
-LEARN_EVERY = 4       # 4스텝마다 학습 수행 (환경 실행 속도 향상)
-LEARN_STEPS = 2       # 한 번 학습할 때 업데이트 횟수 (GPU/CPU 활용도 극대화)
+LEARN_EVERY = 4
+LEARN_STEPS = 2

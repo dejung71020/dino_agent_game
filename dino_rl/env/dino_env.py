@@ -92,14 +92,17 @@ class DinoEnv:
             self.coins.append(Coin(new_x - 150))
 
     def get_state(self):
-        # 💡 핵심 수정 1: 공룡의 앞부분(대략 x=40)을 기준으로, 이미 지나간 장애물은 시야에서 제외!
+        # 공룡의 앞부분(대략 x=40)을 기준으로, 이미 지나간 장애물은 시야에서 제외
         active_obs = [o for o in self.obstacles if o.x + o.width > 40]
         
-        # 진짜로 내 앞에 다가오는 1순위, 2순위 장애물을 세팅
         obs = active_obs[0] if len(active_obs) > 0 else Obstacle(2000)
         next_obs = active_obs[1] if len(active_obs) > 1 else Obstacle(2000)
         
         coin = self.coins[0] if self.coins else Coin(2000)
+        
+        # 💡 핵심 추가: Time-To-Collision (현재 속도 기반 충돌 예상 시간)
+        # 거리가 멀어도 속도가 빠르면 위험하다는 것을 AI가 인지하게 됩니다.
+        ttc1 = max(0, obs.x - 50) / self.speed / 100.0
         
         state = [
             self.dino_y / 200, self.dino_vel / 20, self.speed / config.MAX_SPEED,
@@ -107,13 +110,13 @@ class DinoEnv:
             # 첫 번째 장애물 정보
             (obs.x - 50) / 1000, obs.y / 200, obs.width / 100, (1 if obs.type == "ptero" else 0),
             
-            # 두 번째 장애물 정보 (💡 핵심 수정 2: next_obs.width / 100 추가!)
+            # 두 번째 장애물 정보
             (next_obs.x - 50) / 1000, next_obs.y / 200, next_obs.width / 100, (1 if next_obs.type == "ptero" else 0),
             
             # 코인 및 공룡 상태 정보
             (coin.x - 50) / 1000, (coin.y - self.dino_y) / 200,
             int(self.is_ducking), int(self.is_jumping), 
             
-            0 # 차원 수(16차원)를 맞추기 위한 패딩
+            ttc1 # 💡 기존 0(패딩)이었던 자리에 TTC 정보 투입! (16차원 유지)
         ]
         return np.array(state, dtype=np.float32)
